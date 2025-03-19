@@ -168,7 +168,7 @@ function renderBoard(board) {
             cell.flagged = true;
             img.src = flagImg;
             if (checkWin()) {
-              alert("恭喜你，所有炸彈皆被標記，勝利！");
+              alert("恭喜你，找出所有郁蓁炸彈並避開，你贏了！");
             }
           }
           return; // 標記模式下不觸發後續揭露動作
