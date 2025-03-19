@@ -9,7 +9,7 @@
   <body>
     <div class="game-container">
       <h1>踩地雷遊戲</h1>
-      <!-- 顯示本關炸彈總數 -->
+      <!-- 顯示該關炸彈總數 -->
       <div id="bomb-count">炸彈數量: 0</div>
       <div class="level-select">
         <label for="level">選擇地圖大小：</label>
@@ -19,8 +19,10 @@
           <option value="15">15 × 15</option>
         </select>
         <button id="start-btn">開始遊戲</button>
-        <button id="flag-btn">標記</button>
-        <button id="remove-flag-btn">移除標記</button>
+        <!-- 首次隱藏，開始後顯示 -->
+        <button id="restart-btn" style="display:none;">重新開始</button>
+        <button id="flag-btn" style="display:none;">標記</button>
+        <button id="remove-flag-btn" style="display:none;">移除標記</button>
       </div>
       <div id="game-board"></div>
     </div>
