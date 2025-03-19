@@ -3,12 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>郁蓁地雷王</title>
+    <title>踩地雷遊戲</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <!-- 使用 type="module" 載入 script.js -->
-    <script type="module" src="script.js"></script>
+    <div class="game-container">
+      <h1>踩地雷遊戲</h1>
+      <!-- 顯示本關炸彈總數 -->
+      <div id="bomb-count">炸彈數量: 0</div>
+      <div class="level-select">
+        <label for="level">選擇地圖大小：</label>
+        <select id="level">
+          <option value="8">8 × 8</option>
+          <option value="13">13 × 13</option>
+          <option value="15">15 × 15</option>
+        </select>
+        <button id="start-btn">開始遊戲</button>
+        <button id="flag-btn">標記</button>
+        <button id="remove-flag-btn">移除標記</button>
+      </div>
+      <div id="game-board"></div>
+    </div>
+    <script src="script.js"></script>
   </body>
 </html>
