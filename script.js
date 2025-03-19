@@ -126,4 +126,126 @@ function floodFillEmpty(x, y, board) {
         const neighbor = board[ni][nj];
         if (!neighbor.revealed && !neighbor.flagged && !neighbor.isBomb) {
           neighbor.revealed = true;
-          if (neighbor.adjacent
+          if (neighbor.adjacent === 0) {
+            neighbor.element.src = whiteImg;
+            queue.push([ni, nj]); // 若鄰格也是空白則加入隊列繼續展開
+          } else if (neighbor.adjacent >= 1 && neighbor.adjacent <= 4) {
+            neighbor.element.src = getNumberImage(neighbor.adjacent);
+          } else {
+            neighbor.element.src = whiteImg;
+          }
+        }
+      }
+    });
+  }
+}
+
+// 渲染棋盤
+function renderBoard(board) {
+  const gameBoardDiv = document.getElementById("game-board");
+  gameBoardDiv.innerHTML = ""; // 清除之前的棋盤
+  const table = document.createElement("table");
+  board.forEach((row, i) => {
+    const tr = document.createElement("tr");
+    row.forEach((cell, j) => {
+      const td = document.createElement("td");
+      const img = document.createElement("img");
+      img.src = backImg;
+      cell.element = img;  // 保存該格的 img 參考
+      td.addEventListener("click", function() {
+        // 移除標記模式：若點擊已標記的格子則取消標記
+        if (removeFlagMode) {
+          if (cell.flagged) {
+            cell.flagged = false;
+            img.src = backImg;
+          }
+          removeFlagMode = false;
+          return;
+        }
+        // 標記模式下：若未揭露且未標記，則標記該格（顯示 flag.png）
+        if (markingMode) {
+          if (!cell.revealed && !cell.flagged) {
+            cell.flagged = true;
+            img.src = flagImg;
+            if (checkWin()) {
+              alert("恭喜你，所有炸彈皆被標記，勝利！");
+            }
+          }
+          return; // 標記模式下不觸發後續揭露動作
+        }
+        // 一般模式：若未揭露且未標記
+        if (!cell.revealed && !cell.flagged) {
+          cell.revealed = true;
+          if (cell.isBomb) {
+            img.src = boomImg;
+            revealAllBombs();
+            alert("Boom! 遊戲結束");
+          } else {
+            if (cell.adjacent === 0) {
+              // 顯示空白後執行連鎖展開
+              img.src = whiteImg;
+              floodFillEmpty(i, j, currentBoard);
+            } else if (cell.adjacent >= 1 && cell.adjacent <= 4) {
+              img.src = getNumberImage(cell.adjacent);
+            } else {
+              img.src = whiteImg;
+            }
+          }
+        }
+      });
+      td.appendChild(img);
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+  gameBoardDiv.appendChild(table);
+}
+
+// 「開始遊戲」按鈕
+document.getElementById("start-btn").addEventListener("click", function() {
+  const levelSelect = document.getElementById("level");
+  const size = parseInt(levelSelect.value);
+  let bombCount = 0;
+  if (size === 8) {
+    bombCount = 10;
+  } else if (size === 13) {
+    bombCount = 30;
+  } else if (size === 15) {
+    bombCount = 40;
+  }
+  currentBombCount = bombCount;
+  updateBombCountDisplay(currentBombCount);
+  currentBoard = generateBoard(size, bombCount);
+  renderBoard(currentBoard);
+  // 顯示「標記」、「移除標記」及「重新開始」按鈕
+  document.getElementById("flag-btn").style.display = "inline-block";
+  document.getElementById("remove-flag-btn").style.display = "inline-block";
+  document.getElementById("restart-btn").style.display = "inline-block";
+  // 重設模式
+  markingMode = false;
+  removeFlagMode = false;
+  document.getElementById("flag-btn").textContent = "標記";
+});
+
+// 「重新開始」按鈕：以目前選擇的地圖大小重新產生棋盤
+document.getElementById("restart-btn").addEventListener("click", function() {
+  document.getElementById("start-btn").click();
+});
+
+// 「標記 / 取消」按鈕
+document.getElementById("flag-btn").addEventListener("click", function() {
+  markingMode = !markingMode;
+  if (markingMode) {
+    this.textContent = "取消";
+    removeFlagMode = false; // 若移除標記模式開啟，則關閉
+  } else {
+    this.textContent = "標記";
+  }
+});
+
+// 「移除標記」按鈕：進入移除標記模式，下一次點擊將取消該格標記
+document.getElementById("remove-flag-btn").addEventListener("click", function() {
+  removeFlagMode = true;
+  markingMode = false;
+  document.getElementById("flag-btn").textContent = "標記";
+});
