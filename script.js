@@ -4,7 +4,7 @@ let markingMode = false;
 let removeFlagMode = false;
 let currentBombCount = 0; // 本關炸彈總數
 
-// 圖片路徑（檔案與此檔案放在同一資料夾中）
+// 圖片路徑（全部放在同一資料夾中）
 const backImg   = "back.png";
 const whiteImg  = "white.png";
 const boomImg   = "boom.png";
@@ -100,6 +100,43 @@ function revealAllBombs() {
   }
 }
 
+// flood fill：僅以上下左右（四個方向）展開揭露空白格
+function floodFillEmpty(x, y, board) {
+  const size = board.length;
+  const directions = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1]
+  ];
+  const queue = [];
+  queue.push([x, y]);
+  while (queue.length > 0) {
+    const [i, j] = queue.shift();
+    directions.forEach(([dx, dy]) => {
+      const ni = i + dx;
+      const nj = j + dy;
+      if (ni >= 0 && ni < size && nj >= 0 && nj < size) {
+        const neighbor = board[ni][nj];
+        if (!neighbor.revealed && !neighbor.flagged) {
+          neighbor.revealed = true;
+          // 更新對應的圖片
+          if (!neighbor.isBomb) {
+            if (neighbor.adjacent === 0) {
+              neighbor.element.src = whiteImg;
+              queue.push([ni, nj]); // 若該鄰格也是空白則繼續展開
+            } else if (neighbor.adjacent >= 1 && neighbor.adjacent <= 4) {
+              neighbor.element.src = getNumberImage(neighbor.adjacent);
+            } else {
+              neighbor.element.src = whiteImg;
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
 // 渲染棋盤
 function renderBoard(board) {
   const gameBoardDiv = document.getElementById("game-board");
@@ -113,7 +150,7 @@ function renderBoard(board) {
       img.src = backImg;
       cell.element = img;  // 保存 img 參考
       td.addEventListener("click", function() {
-        // 移除標記模式：若格子已標記，取消標記並回復 back.png
+        // 若處於移除標記模式，點擊已標記的格子則取消標記
         if (removeFlagMode) {
           if (cell.flagged) {
             cell.flagged = false;
@@ -122,7 +159,7 @@ function renderBoard(board) {
           removeFlagMode = false;
           return;
         }
-        // 標記模式：若尚未揭露且未標記，則標記格子並改為 flag.png
+        // 標記模式下，若未揭露且未標記，則標記該格（顯示 flag.png）
         if (markingMode) {
           if (!cell.revealed && !cell.flagged) {
             cell.flagged = true;
@@ -131,19 +168,20 @@ function renderBoard(board) {
               alert("恭喜你，所有炸彈皆被標記，勝利！");
             }
           }
-          return; // 標記模式下不觸發後續動作
+          return; // 標記模式下不觸發後續揭露動作
         }
-        // 一般模式：若未揭露且未標記，進行揭露
+        // 一般模式：若未揭露且未標記
         if (!cell.revealed && !cell.flagged) {
           cell.revealed = true;
           if (cell.isBomb) {
-            // 揭露該炸彈與其他所有炸彈位置
             img.src = boomImg;
             revealAllBombs();
             alert("Boom! 遊戲結束");
           } else {
             if (cell.adjacent === 0) {
               img.src = whiteImg;
+              // flood fill 展開空白區域（僅上下左右）
+              floodFillEmpty(i, j, currentBoard);
             } else if (cell.adjacent >= 1 && cell.adjacent <= 4) {
               img.src = getNumberImage(cell.adjacent);
             } else {
@@ -176,10 +214,20 @@ document.getElementById("start-btn").addEventListener("click", function() {
   updateBombCountDisplay(currentBombCount);
   currentBoard = generateBoard(size, bombCount);
   renderBoard(currentBoard);
-  // 重設各種模式
+  // 顯示標記、移除標記及重新開始按鈕
+  document.getElementById("flag-btn").style.display = "inline-block";
+  document.getElementById("remove-flag-btn").style.display = "inline-block";
+  document.getElementById("restart-btn").style.display = "inline-block";
+  // 重設模式
   markingMode = false;
   removeFlagMode = false;
   document.getElementById("flag-btn").textContent = "標記";
+});
+
+// 「重新開始」按鈕：以目前選擇的地圖大小重新產生棋盤
+document.getElementById("restart-btn").addEventListener("click", function() {
+  // 模擬按下「開始遊戲」
+  document.getElementById("start-btn").click();
 });
 
 // 「標記 / 取消」按鈕
@@ -193,7 +241,7 @@ document.getElementById("flag-btn").addEventListener("click", function() {
   }
 });
 
-// 「移除標記」按鈕：點擊後進入移除標記模式，下一次點擊取消該格標記
+// 「移除標記」按鈕：進入移除標記模式，下一次點擊將取消該格標記
 document.getElementById("remove-flag-btn").addEventListener("click", function() {
   removeFlagMode = true;
   markingMode = false;
